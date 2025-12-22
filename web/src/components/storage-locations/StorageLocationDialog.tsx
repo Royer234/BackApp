@@ -1,5 +1,5 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
-import { useState } from 'react';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { useEffect, useState } from 'react';
 import type { StorageLocation } from '../../types';
 import PathPickerField from '../common/PathPickerField';
 
@@ -12,11 +12,10 @@ interface StorageLocationFormProps {
 
 function StorageLocationDialog({ open, onSubmit, onCancel, initialData }: StorageLocationFormProps) {
   const [basePath, setBasePath] = useState(initialData?.base_path || '');
-  const [showExplorer, setShowExplorer] = useState(false);
 
-  const handlePathSelect = (path: string) => {
-    setBasePath(path);
-  };
+  useEffect(() => {
+    setBasePath(initialData?.base_path || '');
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // Update the hidden input field with the selected path before submitting
@@ -31,6 +30,7 @@ function StorageLocationDialog({ open, onSubmit, onCancel, initialData }: Storag
     <>
       <Dialog open={open} onClose={onCancel} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
+          <input type="hidden" name="base_path" value={basePath} />
           <DialogTitle>
             {initialData ? 'Edit Storage Location' : 'New Storage Location'}
           </DialogTitle>
