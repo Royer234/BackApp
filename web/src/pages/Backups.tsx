@@ -171,7 +171,7 @@ export default function Backups() {
                                 {files.length === 0 ? (
                                   <Typography color="text.secondary">No files recorded for this run.</Typography>
                                 ) : (
-                                  <FileTree files={files} onDownload={handleDownloadFile} />
+                                  <FileTree files={files} onDownload={handleDownloadFile} basePath={location?.base_path} />
                                 )}
                               </AccordionDetails>
                             </Accordion>

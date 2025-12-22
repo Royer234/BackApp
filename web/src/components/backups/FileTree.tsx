@@ -22,6 +22,7 @@ interface FileTreeProps {
   files: BackupFile[];
   rootLabel?: string;
   onDownload?: (fileId: number, filePath: string) => void;
+  basePath?: string;
 }
 
 interface TreeNode {
@@ -33,8 +34,8 @@ interface TreeNode {
   fileId?: number;
 }
 
-function buildTree(files: BackupFile[]): TreeNode {
-  const root: TreeNode = { name: '/', path: '/', isDir: true, children: [] };
+function buildTree(files: BackupFile[], basePath?: string): TreeNode {
+  const root: TreeNode = { name: 'Contents', path: '', isDir: true, children: [] };
 
   const ensureDir = (parts: string[], base: TreeNode) => {
     let node = base;
@@ -55,7 +56,17 @@ function buildTree(files: BackupFile[]): TreeNode {
     if (!fullPath) continue;
     // Normalize path
     const normalized = fullPath.replace(/\\/g, '/');
-    const parts = normalized.split('/').filter(Boolean);
+    
+    // If basePath provided, strip it to show relative structure
+    let pathToParse = normalized;
+    if (basePath) {
+      const normalizedBase = basePath.replace(/\\/g, '/').replace(/\/$/, '');
+      if (normalized.startsWith(normalizedBase + '/')) {
+        pathToParse = normalized.slice(normalizedBase.length + 1);
+      }
+    }
+    
+    const parts = pathToParse.split('/').filter(Boolean);
     if (parts.length === 0) continue;
 
     const fileName = parts[parts.length - 1];
@@ -144,8 +155,8 @@ function TreeNodeView({ node, depth = 0, onDownload }: { node: TreeNode; depth?:
   );
 }
 
-export default function FileTree({ files, onDownload }: FileTreeProps) {
-  const tree = useMemo(() => buildTree(files), [files]);
+export default function FileTree({ files, onDownload, basePath }: FileTreeProps) {
+  const tree = useMemo(() => buildTree(files, basePath), [files, basePath]);
   return (
     <List disablePadding>
       <TreeNodeView node={tree} onDownload={onDownload} />
