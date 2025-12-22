@@ -1,4 +1,4 @@
-import { TextField, Box, Typography } from '@mui/material';
+import { TextField, Box, Typography, Link } from '@mui/material';
 import { useMemo } from 'react';
 import cronParser from 'cron-parser';
 
@@ -41,6 +41,10 @@ export function CronTextField({
       {cronDescription && (
         <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
           {cronDescription}
+          {' '}
+          <Link href={`https://crontab.guru/#${value}`} target="_blank" rel="noopener noreferrer">
+            Explain
+          </Link>
         </Typography>
       )}
     </Box>
