@@ -124,7 +124,7 @@ function BackupProfileInfoGrid({ profile }: BackupProfileInfoGridProps) {
             </Box>
             {nextRunTime && (
               <Typography variant="body2" color="text.secondary" sx={{ pl: 3 }}>
-                Next run: <strong>{nextRunTime.toLocaleString()}</strong>
+                Next run: <strong>{profile.enabled ? nextRunTime.toLocaleString() : 'Disabled'}</strong>
               </Typography>
             )}
           </Box>

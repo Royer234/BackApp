@@ -10,22 +10,22 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
+  Checkbox,
   Collapse,
   Divider,
+  FormControlLabel,
   Grid,
   Stack,
   TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { backupProfileApi } from '../../api';
 import type { BackupProfile } from '../../types';
 import BackupProfileInfoGrid from './BackupProfileInfoGrid';
 import CommandsDisplay from './CommandsDisplay';
-import BackupProfileFileRulesList from './BackupProfileFileRulesList';
 import FileRulesDisplay from './FileRulesDisplay';
 
 interface BackupProfileCardProps {
@@ -41,6 +41,12 @@ function BackupProfileCard({ profile, onExecute, onDelete, onEdit, onRefresh }: 
   const [expanded, setExpanded] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profile.name);
+  const [enabled, setEnabled] = useState(profile.enabled);
+
+  useEffect(() => {
+    setEditedName(profile.name);
+    setEnabled(profile.enabled);
+  }, [profile]);
 
   const handleNameClick = () => {
     setIsEditingName(true);
@@ -56,7 +62,7 @@ function BackupProfileCard({ profile, onExecute, onDelete, onEdit, onRefresh }: 
           storage_location_id: profile.storage_location_id,
           naming_rule_id: profile.naming_rule_id,
           schedule_cron: profile.schedule_cron,
-          enabled: profile.enabled,
+          enabled,
         });
         profile.name = editedName.trim(); // Update local state
       } catch (error) {
@@ -67,6 +73,25 @@ function BackupProfileCard({ profile, onExecute, onDelete, onEdit, onRefresh }: 
       setEditedName(profile.name);
     }
     setIsEditingName(false);
+  };
+
+  const handleToggleEnabled = async (checked: boolean) => {
+    setEnabled(checked);
+    try {
+      await backupProfileApi.update(profile.id, {
+        name: editedName.trim() || profile.name,
+        server_id: profile.server_id,
+        storage_location_id: profile.storage_location_id,
+        naming_rule_id: profile.naming_rule_id,
+        schedule_cron: profile.schedule_cron,
+        enabled: checked,
+      });
+      profile.enabled = checked;
+      onRefresh?.();
+    } catch (error) {
+      console.error('Failed to update enabled state:', error);
+      setEnabled(!checked); // revert on error
+    }
   };
 
   const handleNameKeyDown = (e: React.KeyboardEvent) => {
@@ -123,10 +148,15 @@ function BackupProfileCard({ profile, onExecute, onDelete, onEdit, onRefresh }: 
                   {profile.name}
                 </Typography>
               )}
-              <Chip
-                label={profile.enabled ? 'Enabled' : 'Disabled'}
-                color={profile.enabled ? 'success' : 'default'}
-                size="medium"
+              <FormControlLabel
+                control={(
+                  <Checkbox
+                    checked={enabled}
+                    onChange={(e) => handleToggleEnabled(e.target.checked)}
+                    color="success"
+                  />
+                )}
+                label={enabled ? 'Enabled' : 'Disabled'}
               />
             </Box>
 
@@ -143,7 +173,7 @@ function BackupProfileCard({ profile, onExecute, onDelete, onEdit, onRefresh }: 
                   size="large"
                   startIcon={<PlayArrow />}
                   onClick={() => onExecute(profile.id)}
-                  disabled={!profile.enabled}
+                  disabled={!enabled}
                   sx={{ minWidth: 100 }}
                 >
                   Run

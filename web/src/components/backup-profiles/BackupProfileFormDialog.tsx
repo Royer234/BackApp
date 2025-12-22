@@ -59,7 +59,7 @@ function BackupProfileFormDialog({
     setProfileData({ ...profileData, ...newData });
   };
 
-  const handleSave = async () => {
+  const handleSave = async (closeAfterSave = false) => {
     if (!profileData || !profileData.name || !profileData.server_id || !profileData.storage_location_id || !profileData.naming_rule_id) return;
 
     setLoading(true);
@@ -82,17 +82,33 @@ function BackupProfileFormDialog({
         newProfileId = createdProfile.id;
         setCreatedProfileId(newProfileId);
         setProfileData(createdProfile);
+        if (closeAfterSave) {
+          onSuccess();
+          onClose();
+        }
         // After creating, stay on the dialog and allow adding commands/file rules
         return;
       }
 
-      onSuccess();
-      onClose();
+      if (closeAfterSave) {
+        onSuccess();
+        onClose();
+      }
     } catch (error) {
       console.error('Error saving profile:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDone = async () => {
+    if (isEditMode) {
+      await handleSave(true);
+      return;
+    }
+    // In create-and-continue flow, the profile is already created; just close and refresh
+    onSuccess();
+    onClose();
   };
 
   return (
@@ -161,7 +177,7 @@ function BackupProfileFormDialog({
           </Button>
         )}
         {hasProfileId && (
-          <Button onClick={onSuccess} variant="contained" disabled={loading}>
+          <Button onClick={handleDone} variant="contained" disabled={loading}>
             Done
           </Button>
         )}
