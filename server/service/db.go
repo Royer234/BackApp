@@ -78,15 +78,15 @@ func initializeDefaults() {
 		defaultNamingRules := []entity.NamingRule{
 			{
 				Name:    "Date-Time Format",
-				Pattern: "backup-{YYYY}-{MM}-{DD}_{HH}-{MM}-{SS}",
+				Pattern: "{profile}-{YYYY}-{MM}-{DD}_{HH}-{MM}-{SS}",
 			},
 			{
 				Name:    "Simple Date Format",
-				Pattern: "backup-{YYYY}{MM}{DD}",
+				Pattern: "{profile}-{YYYY}{MM}{DD}",
 			},
 			{
 				Name:    "Timestamp Format",
-				Pattern: "backup-{TIMESTAMP}",
+				Pattern: "{profile}-{TIMESTAMP}",
 			},
 		}
 		for _, rule := range defaultNamingRules {
