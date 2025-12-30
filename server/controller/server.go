@@ -86,7 +86,7 @@ func handleServersCreate(c *gin.Context) {
 			return
 		}
 		// Test the SSH connection before storing
-		if err := service.TestSSHConnection(host, username, string(keyContent)); err != nil {
+		if err := service.TestSSHConnection(host, username, string(keyContent), port); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "SSH connection test failed: " + err.Error()})
 			return
 		}

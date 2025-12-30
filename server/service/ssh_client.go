@@ -68,9 +68,15 @@ func NewSSHClient(server *entity.Server) (*SSHClient, error) {
 		return nil, fmt.Errorf("unsupported auth_type: %s", server.AuthType)
 	}
 
+	// Build address with correct port
 	address := server.Host
 	if _, _, err := net.SplitHostPort(server.Host); err != nil {
-		address = net.JoinHostPort(server.Host, "22")
+		// hostname doesn't contain port, add it
+		port := server.Port
+		if port == 0 {
+			port = 22
+		}
+		address = net.JoinHostPort(server.Host, fmt.Sprintf("%d", port))
 	}
 
 	client, err := ssh.Dial("tcp", address, config)

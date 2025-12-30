@@ -12,7 +12,7 @@ import (
 )
 
 // TestSSHConnection tests an SSH connection with a private key
-func TestSSHConnection(hostname, username, keyContent string) error {
+func TestSSHConnection(hostname, username, keyContent string, port int) error {
 	signer, err := ssh.ParsePrivateKey([]byte(keyContent))
 	if err != nil {
 		return fmt.Errorf("failed to parse private key: %v", err)
@@ -27,10 +27,14 @@ func TestSSHConnection(hostname, username, keyContent string) error {
 		Timeout:         10 * time.Second,
 	}
 
-	// Add port if not specified
+	// Build address with port
 	address := hostname
 	if _, _, err := net.SplitHostPort(hostname); err != nil {
-		address = net.JoinHostPort(hostname, "22")
+		// hostname doesn't contain port, add it
+		if port == 0 {
+			port = 22
+		}
+		address = net.JoinHostPort(hostname, fmt.Sprintf("%d", port))
 	}
 
 	conn, err := ssh.Dial("tcp", address, config)
@@ -55,7 +59,7 @@ func TestSSHConnection(hostname, username, keyContent string) error {
 }
 
 // TestSSHConnectionWithPassword tests an SSH connection using username/password
-func TestSSHConnectionWithPassword(hostname, username, password string) error {
+func TestSSHConnectionWithPassword(hostname, username, password string, port int) error {
 	config := &ssh.ClientConfig{
 		User: username,
 		Auth: []ssh.AuthMethod{
@@ -64,10 +68,17 @@ func TestSSHConnectionWithPassword(hostname, username, password string) error {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Timeout:         10 * time.Second,
 	}
+
+	// Build address with port
 	address := hostname
 	if _, _, err := net.SplitHostPort(hostname); err != nil {
-		address = net.JoinHostPort(hostname, "22")
+		// hostname doesn't contain port, add it
+		if port == 0 {
+			port = 22
+		}
+		address = net.JoinHostPort(hostname, fmt.Sprintf("%d", port))
 	}
+
 	conn, err := ssh.Dial("tcp", address, config)
 	if err != nil {
 		return fmt.Errorf("SSH connection failed: %v", err)
@@ -97,14 +108,14 @@ func TestSSHConnectionUsingServer(server *entity.Server) error {
 			if err != nil {
 				return fmt.Errorf("failed to read private key file: %v", err)
 			}
-			return TestSSHConnection(server.Host, server.Username, string(keyData))
+			return TestSSHConnection(server.Host, server.Username, string(keyData), server.Port)
 		}
-		return TestSSHConnection(server.Host, server.Username, server.PrivateKeyPath)
+		return TestSSHConnection(server.Host, server.Username, server.PrivateKeyPath, server.Port)
 	case "password":
 		if server.Password == "" {
 			return fmt.Errorf("server has no password configured")
 		}
-		return TestSSHConnectionWithPassword(server.Host, server.Username, server.Password)
+		return TestSSHConnectionWithPassword(server.Host, server.Username, server.Password, server.Port)
 	default:
 		return fmt.Errorf("unsupported auth_type: %s", server.AuthType)
 	}
