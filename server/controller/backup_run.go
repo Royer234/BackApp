@@ -76,6 +76,26 @@ func handleBackupRunLogs(c *gin.Context) {
 	c.JSON(http.StatusOK, logs)
 }
 
+func handleBackupRunDeletionImpact(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	impact, err := service.ServiceGetBackupRunDeletionImpact(uint(id))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "backup run not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, impact)
+}
+
 func handleBackupRunDelete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -108,6 +128,12 @@ func handleBackupFileDownload(c *gin.Context) {
 		return
 	}
 
+	// Check if file is marked as deleted
+	if file.Deleted {
+		c.JSON(http.StatusGone, gin.H{"error": "file has been deleted", "deleted": true})
+		return
+	}
+
 	// Check if file exists on disk
 	if _, err := os.Stat(file.LocalPath); os.IsNotExist(err) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "file not found on disk"})
@@ -116,4 +142,43 @@ func handleBackupFileDownload(c *gin.Context) {
 
 	// Serve the file for download
 	c.FileAttachment(file.LocalPath, filepath.Base(file.RemotePath))
+}
+
+func handleBackupFileDelete(c *gin.Context) {
+	fileID, err := strconv.ParseUint(c.Param("fileId"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file id"})
+		return
+	}
+
+	if err := service.ServiceDeleteBackupFile(uint(fileID)); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+
+func handleBackupFileGet(c *gin.Context) {
+	fileID, err := strconv.ParseUint(c.Param("fileId"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid file id"})
+		return
+	}
+
+	file, err := service.ServiceGetBackupFile(uint(fileID))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "file not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, file)
 }

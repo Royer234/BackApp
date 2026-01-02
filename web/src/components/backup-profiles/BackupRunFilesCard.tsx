@@ -1,9 +1,11 @@
+import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import FolderIcon from '@mui/icons-material/Folder';
 import {
   Box,
   Card,
   CardContent,
+  Chip,
   IconButton,
   Paper,
   Table,
@@ -22,9 +24,10 @@ interface BackupRunFilesCardProps {
   files: BackupFile[];
   formatSize: (bytes: number) => string;
   onDownload: (fileId: number, filePath: string) => void;
+  onDeleteFile?: (fileId: number) => void;
 }
 
-function BackupRunFilesCard({ files, formatSize, onDownload }: BackupRunFilesCardProps) {
+function BackupRunFilesCard({ files, formatSize, onDownload, onDeleteFile }: BackupRunFilesCardProps) {
   return (
     <Card>
       <CardContent>
@@ -49,17 +52,19 @@ function BackupRunFilesCard({ files, formatSize, onDownload }: BackupRunFilesCar
                   <TableCell>File Path</TableCell>
                   <TableCell align="right">Size</TableCell>
                   <TableCell>Backed Up</TableCell>
-                  <TableCell align="center">Download</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="center">Actions</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {files.map((file, index) => (
-                  <TableRow key={index} hover>
+                  <TableRow key={index} hover sx={file.deleted ? { opacity: 0.6 } : {}}>
                     <TableCell>
                       <Typography
                         variant="body2"
                         fontFamily="monospace"
                         fontSize="0.875rem"
+                        sx={file.deleted ? { textDecoration: 'line-through' } : {}}
                       >
                         {file.remote_path}
                       </Typography>
@@ -74,16 +79,61 @@ function BackupRunFilesCard({ files, formatSize, onDownload }: BackupRunFilesCar
                         {formatDate(file.created_at)}
                       </Typography>
                     </TableCell>
-                    <TableCell align="center">
-                      <Tooltip title="Download file">
-                        <IconButton
+                    <TableCell>
+                      {file.deleted ? (
+                        <Chip
+                          label="Deleted"
+                          color="error"
                           size="small"
-                          onClick={() => onDownload(file.id, file.remote_path || '')}
-                          aria-label={`Download ${file.remote_path || ''}`}
-                        >
-                          <DownloadIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                          variant="outlined"
+                        />
+                      ) : (
+                        <Chip
+                          label="Available"
+                          color="success"
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                        {file.deleted ? (
+                          <Tooltip title="File has been deleted">
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled
+                                aria-label="File deleted"
+                              >
+                                <DownloadIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Download file">
+                            <IconButton
+                              size="small"
+                              onClick={() => onDownload(file.id, file.remote_path || '')}
+                              aria-label={`Download ${file.remote_path || ''}`}
+                            >
+                              <DownloadIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {onDeleteFile && !file.deleted && (
+                          <Tooltip title="Delete file">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => onDeleteFile(file.id)}
+                              aria-label={`Delete ${file.remote_path || ''}`}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -23,6 +23,7 @@ func SetupRouter(r *gin.Engine) {
 		api.GET("/servers/:id", handleServerGet)
 		api.PUT("/servers/:id", handleServerUpdate)
 		api.DELETE("/servers/:id", handleServerDelete)
+		api.GET("/servers/:id/deletion-impact", handleServerDeletionImpact)
 		api.POST("/servers/:id/test-connection", handleServerTestConnection)
 		api.GET("/servers/:id/files", handleServerListFiles)
 
@@ -30,6 +31,8 @@ func SetupRouter(r *gin.Engine) {
 		api.POST("/storage-locations", handleStorageLocationsCreate)
 		api.PUT("/storage-locations/:id", handleStorageLocationUpdate)
 		api.DELETE("/storage-locations/:id", handleStorageLocationDelete)
+		api.GET("/storage-locations/:id/move-impact", handleStorageLocationMoveImpact)
+		api.GET("/storage-locations/:id/deletion-impact", handleStorageLocationDeletionImpact)
 		api.GET("/local-files", handleLocalFilesList)
 
 		api.GET("/naming-rules", handleNamingRulesList)
@@ -62,8 +65,11 @@ func SetupRouter(r *gin.Engine) {
 		api.GET("/backup-runs/:id", handleBackupRunGet)
 		api.GET("/backup-runs/:id/files", handleBackupRunFiles)
 		api.GET("/backup-runs/:id/logs", handleBackupRunLogs)
+		api.GET("/backup-runs/:id/deletion-impact", handleBackupRunDeletionImpact)
 		api.DELETE("/backup-runs/:id", handleBackupRunDelete)
+		api.GET("/backup-files/:fileId", handleBackupFileGet)
 		api.GET("/backup-files/:fileId/download", handleBackupFileDownload)
+		api.DELETE("/backup-files/:fileId", handleBackupFileDelete)
 
 		// Test-only endpoints
 		if config.TestMode {

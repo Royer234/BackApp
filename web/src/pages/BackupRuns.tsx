@@ -9,7 +9,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { backupRunApi } from '../api';
 import { BackupRunsList } from '../components/backup-profiles';
 import type { BackupRun } from '../types';
@@ -18,6 +18,17 @@ function BackupRuns() {
   const [runs, setRuns] = useState<BackupRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const loadRuns = useCallback(async () => {
+    try {
+      const data = await backupRunApi.list();
+      setRuns(data || []);
+    } catch (error) {
+      console.error('Error loading runs:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     loadRuns();
@@ -28,18 +39,7 @@ function BackupRuns() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [autoRefresh]);
-
-  const loadRuns = async () => {
-    try {
-      const data = await backupRunApi.list();
-      setRuns(data || []);
-    } catch (error) {
-      console.error('Error loading runs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [autoRefresh, loadRuns]);
 
   if (loading) {
     return (
@@ -77,7 +77,7 @@ function BackupRuns() {
 
       <Card>
         <CardContent>
-          <BackupRunsList runs={runs} />
+          <BackupRunsList runs={runs} onRunDeleted={loadRuns} />
         </CardContent>
       </Card>
     </Box>

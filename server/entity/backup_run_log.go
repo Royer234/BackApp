@@ -4,7 +4,7 @@ import "time"
 
 type BackupRunLog struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
-	BackupRunID uint      `json:"backup_run_id" gorm:"not null;index"`
+	BackupRunID uint      `json:"backup_run_id" gorm:"not null;index;constraint:OnDelete:CASCADE"`
 	BackupRun   BackupRun `json:"-" gorm:"foreignKey:BackupRunID"`
 	Timestamp   time.Time `json:"timestamp" gorm:"not null"`
 	Level       string    `json:"level" gorm:"not null"` // INFO, WARNING, ERROR, DEBUG

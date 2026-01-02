@@ -1,4 +1,5 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {
   Alert,
   Box,
@@ -6,18 +7,20 @@ import {
   Chip,
   CircularProgress,
   Grid,
+  Snackbar,
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { backupRunApi } from '../api';
+import { backupRunApi, backupFileApi } from '../api';
 import {
   BackupRunFilesCard,
   BackupRunInfoCard,
   BackupRunLogsCard,
   BackupRunStatsCard,
 } from '../components/backup-profiles';
-import type { BackupFile, BackupRun, BackupRunLog } from '../types';
+import { DestructiveActionDialog, type DestructiveAction } from '../components/common';
+import type { BackupFile, BackupRun, BackupRunLog, DeletionImpact } from '../types';
 
 function BackupRunDetail() {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +30,22 @@ function BackupRunDetail() {
   const [logs, setLogs] = useState<BackupRunLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  // Delete run confirmation state
+  const [deleteRunDialogOpen, setDeleteRunDialogOpen] = useState(false);
+  const [deletionImpact, setDeletionImpact] = useState<DeletionImpact | null>(null);
+  const [loadingImpact, setLoadingImpact] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Delete file confirmation state
+  const [deleteFileDialogOpen, setDeleteFileDialogOpen] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<BackupFile | null>(null);
+  const [deletingFile, setDeletingFile] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -178,6 +197,121 @@ function BackupRunDetail() {
     return '-';
   };
 
+  // Delete run handlers
+  const handleDeleteRunRequest = async () => {
+    if (!id) return;
+
+    setLoadingImpact(true);
+    setDeleteRunDialogOpen(true);
+
+    try {
+      const impact = await backupRunApi.getDeletionImpact(parseInt(id));
+      setDeletionImpact(impact);
+    } catch (error) {
+      console.error('Error loading deletion impact:', error);
+      setDeletionImpact({ backup_profiles: 0, backup_runs: 1, backup_files: files.length, total_size_bytes: 0 });
+    } finally {
+      setLoadingImpact(false);
+    }
+  };
+
+  const handleConfirmDeleteRun = async () => {
+    if (!id) return;
+
+    setDeleting(true);
+    try {
+      await backupRunApi.delete(parseInt(id));
+      setSnackbar({
+        open: true,
+        message: 'Backup run deleted successfully',
+        severity: 'success',
+      });
+      navigate('/backup-runs');
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to delete backup run',
+        severity: 'error',
+      });
+    } finally {
+      setDeleting(false);
+      setDeleteRunDialogOpen(false);
+      setDeletionImpact(null);
+    }
+  };
+
+  const handleCancelDeleteRun = () => {
+    setDeleteRunDialogOpen(false);
+    setDeletionImpact(null);
+  };
+
+  // Delete file handlers
+  const handleDeleteFileRequest = (fileId: number) => {
+    const file = files.find(f => f.id === fileId);
+    if (!file) return;
+
+    setFileToDelete(file);
+    setDeleteFileDialogOpen(true);
+  };
+
+  const handleConfirmDeleteFile = async () => {
+    if (!fileToDelete) return;
+
+    setDeletingFile(true);
+    try {
+      await backupFileApi.delete(fileToDelete.id);
+      setSnackbar({
+        open: true,
+        message: 'File deleted successfully',
+        severity: 'success',
+      });
+      // Refresh files list
+      if (id) {
+        const filesData = await backupRunApi.getFiles(parseInt(id));
+        setFiles(filesData || []);
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to delete file',
+        severity: 'error',
+      });
+    } finally {
+      setDeletingFile(false);
+      setDeleteFileDialogOpen(false);
+      setFileToDelete(null);
+    }
+  };
+
+  const handleCancelDeleteFile = () => {
+    setDeleteFileDialogOpen(false);
+    setFileToDelete(null);
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const getDeleteRunActions = (): DestructiveAction[] => {
+    if (!deletionImpact) return [];
+    const actions: DestructiveAction[] = [];
+
+    if (deletionImpact.backup_files > 0) {
+      actions.push({
+        type: 'delete',
+        label: `Delete ${deletionImpact.backup_files} backup file${deletionImpact.backup_files !== 1 ? 's' : ''} from disk`,
+        details: `Total size: ${formatSize(deletionImpact.total_size_bytes)}`,
+      });
+    }
+
+    actions.push({
+      type: 'delete',
+      label: 'Delete backup run logs and metadata',
+    });
+
+    return actions;
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" py={12}>
@@ -216,6 +350,14 @@ function BackupRunDetail() {
           </Typography>
           {getStatusBadge(run.status)}
         </Box>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<DeleteIcon />}
+          onClick={handleDeleteRunRequest}
+        >
+          Delete Run
+        </Button>
       </Box>
 
       <Grid container spacing={3} mb={3}>
@@ -250,8 +392,66 @@ function BackupRunDetail() {
           files={files}
           formatSize={formatSize}
           onDownload={handleDownloadFile}
+          onDeleteFile={handleDeleteFileRequest}
         />
       </Box>
+
+      {/* Delete Run Confirmation Dialog */}
+      <DestructiveActionDialog
+        open={deleteRunDialogOpen}
+        title={`Delete Backup Run #${run.id}`}
+        description="Are you sure you want to delete this backup run? This will permanently delete all associated files from disk."
+        actionType="delete"
+        impact={{
+          backupRuns: 1,
+          backupFiles: deletionImpact?.backup_files,
+          totalSizeBytes: deletionImpact?.total_size_bytes,
+          filePaths: deletionImpact?.file_paths,
+        }}
+        actions={getDeleteRunActions()}
+        onConfirm={handleConfirmDeleteRun}
+        onCancel={handleCancelDeleteRun}
+        confirmText="Delete Backup Run"
+        loading={deleting || loadingImpact}
+      />
+
+      {/* Delete File Confirmation Dialog */}
+      <DestructiveActionDialog
+        open={deleteFileDialogOpen}
+        title="Delete Backup File"
+        description={`Are you sure you want to delete "${fileToDelete?.remote_path || ''}"?`}
+        actionType="delete"
+        impact={{
+          backupFiles: 1,
+          totalSizeBytes: fileToDelete?.size_bytes ?? fileToDelete?.file_size ?? 0,
+        }}
+        actions={[
+          {
+            type: 'delete',
+            label: 'Delete file from disk',
+            details: fileToDelete?.local_path,
+          },
+          {
+            type: 'delete',
+            label: 'Mark file as deleted in database',
+          },
+        ]}
+        onConfirm={handleConfirmDeleteFile}
+        onCancel={handleCancelDeleteFile}
+        confirmText="Delete File"
+        loading={deletingFile}
+      />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

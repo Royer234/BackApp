@@ -22,6 +22,7 @@ It is a very lightweight server (under 50 MB) that runs locally (or on a dedicat
 - View detailed logs of each backup run, including success/failure status and output of commands.
 - Schedule backups using cron expressions.
 - Simple and intuitive web interface built with React and Material-UI.
+- Deleting backups, backup profiles, and servers with confirmation dialogs to prevent accidental deletions.
 
 ## Configuration
 
@@ -82,7 +83,6 @@ In case 8080 is in use, set a different port with `-port=9090`.
 
 ## Not supported
 
-- Deleting backups
 - Incremental backups
 - Backup deduplication
 - Restoring from backups

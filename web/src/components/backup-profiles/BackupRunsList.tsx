@@ -16,17 +16,26 @@ import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { BackupRun } from '../../types';
+import type { BackupRun, DeletionImpact } from '../../types';
 import { formatDate } from '../../utils/format';
 import { backupProfileApi, backupRunApi } from '../../api';
+import { DestructiveActionDialog, type DestructiveAction } from '../common';
 
 interface BackupRunsListProps {
   runs: BackupRun[];
+  onRunDeleted?: () => void;
 }
 
-function BackupRunsList({ runs }: BackupRunsListProps) {
+function BackupRunsList({ runs, onRunDeleted }: BackupRunsListProps) {
   const navigate = useNavigate();
   const [profilesMap, setProfilesMap] = useState<Record<number, string>>({});
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [runToDelete, setRunToDelete] = useState<BackupRun | null>(null);
+  const [deletionImpact, setDeletionImpact] = useState<DeletionImpact | null>(null);
+  const [loadingImpact, setLoadingImpact] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -69,6 +78,70 @@ function BackupRunsList({ runs }: BackupRunsListProps) {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+  };
+
+  const handleDeleteRequest = async (run: BackupRun, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRunToDelete(run);
+    setLoadingImpact(true);
+    setDeleteDialogOpen(true);
+
+    try {
+      const impact = await backupRunApi.getDeletionImpact(run.id);
+      setDeletionImpact(impact);
+    } catch (error) {
+      console.error('Error loading deletion impact:', error);
+      setDeletionImpact({ backup_profiles: 0, backup_runs: 1, backup_files: 0, total_size_bytes: 0 });
+    } finally {
+      setLoadingImpact(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!runToDelete) return;
+
+    setDeleting(true);
+    try {
+      await backupRunApi.delete(runToDelete.id);
+      if (onRunDeleted) {
+        onRunDeleted();
+      } else {
+        navigate(0); // Refresh page if no callback provided
+      }
+    } catch (error) {
+      console.error('Failed to delete run:', error);
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setRunToDelete(null);
+      setDeletionImpact(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setRunToDelete(null);
+    setDeletionImpact(null);
+  };
+
+  const getDeleteActions = (): DestructiveAction[] => {
+    if (!deletionImpact) return [];
+    const actions: DestructiveAction[] = [];
+
+    if (deletionImpact.backup_files > 0) {
+      actions.push({
+        type: 'delete',
+        label: `Delete ${deletionImpact.backup_files} backup file${deletionImpact.backup_files !== 1 ? 's' : ''} from disk`,
+        details: `Total size: ${formatSize(deletionImpact.total_size_bytes)}`,
+      });
+    }
+
+    actions.push({
+      type: 'delete',
+      label: 'Delete backup run logs and metadata',
+    });
+
+    return actions;
   };
 
   if (runs.length === 0) {
@@ -165,18 +238,7 @@ function BackupRunsList({ runs }: BackupRunsListProps) {
                   <Tooltip title="Delete backup run">
                     <IconButton
                       size="small"
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (!confirm(`Delete backup run #${run.id}? This will remove its records.`)) return;
-                        try {
-                          await backupRunApi.delete(run.id);
-                          // Optimistically remove row by reloading page; parent list owns data
-                          // If you prefer no reload, lift state update via parent onDeleted callback
-                          navigate(0);
-                        } catch (err) {
-                          console.error('Failed to delete run:', err);
-                        }
-                      }}
+                      onClick={(e) => handleDeleteRequest(run, e)}
                       aria-label={`Delete run #${run.id}`}
                     >
                       <DeleteIcon fontSize="small" />
@@ -188,6 +250,24 @@ function BackupRunsList({ runs }: BackupRunsListProps) {
           })}
         </TableBody>
       </Table>
+
+      <DestructiveActionDialog
+        open={deleteDialogOpen}
+        title={`Delete Backup Run #${runToDelete?.id || ''}`}
+        description="Are you sure you want to delete this backup run? This will permanently delete all associated files from disk."
+        actionType="delete"
+        impact={{
+          backupRuns: 1,
+          backupFiles: deletionImpact?.backup_files,
+          totalSizeBytes: deletionImpact?.total_size_bytes,
+          filePaths: deletionImpact?.file_paths,
+        }}
+        actions={getDeleteActions()}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Delete Backup Run"
+        loading={deleting || loadingImpact}
+      />
     </TableContainer>
   );
 }

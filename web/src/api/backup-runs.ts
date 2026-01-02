@@ -1,6 +1,7 @@
 import type { BackupRun } from '../types/backup-run';
 import type { BackupFile } from '../types/backup-file';
 import type { BackupRunLog } from '../types/backup-run-log';
+import type { DeletionImpact } from '../types/deletion-impact';
 import { fetchJSON } from './client';
 
 export const backupRunApi = {
@@ -30,8 +31,27 @@ export const backupRunApi = {
     return fetchJSON<BackupRunLog[]>(`/backup-runs/${id}/logs`);
   },
 
+  async getDeletionImpact(id: number): Promise<DeletionImpact> {
+    return fetchJSON<DeletionImpact>(`/backup-runs/${id}/deletion-impact`);
+  },
+
   async delete(id: number): Promise<boolean> {
     await fetchJSON(`/backup-runs/${id}`, { method: 'DELETE' });
     return true;
+  },
+};
+
+export const backupFileApi = {
+  async get(id: number): Promise<BackupFile> {
+    return fetchJSON<BackupFile>(`/backup-files/${id}`);
+  },
+
+  async delete(id: number): Promise<boolean> {
+    await fetchJSON(`/backup-files/${id}`, { method: 'DELETE' });
+    return true;
+  },
+
+  getDownloadUrl(id: number): string {
+    return `/api/v1/backup-files/${id}/download`;
   },
 };

@@ -1,4 +1,5 @@
 import type { Server, ServerCreateInput } from '../types/server';
+import type { DeletionImpact } from '../types/deletion-impact';
 import { fetchJSON, fetchWithoutResponse } from './client';
 
 export const serverApi = {
@@ -25,6 +26,10 @@ export const serverApi = {
       },
       body: JSON.stringify(data),
     });
+  },
+
+  async getDeletionImpact(id: number): Promise<DeletionImpact> {
+    return fetchJSON<DeletionImpact>(`/servers/${id}/deletion-impact`);
   },
 
   async delete(id: number): Promise<boolean> {

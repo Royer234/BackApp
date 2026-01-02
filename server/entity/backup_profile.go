@@ -6,17 +6,17 @@ import "time"
 type BackupProfile struct {
 	ID                uint      `gorm:"primaryKey" json:"id"`
 	Name              string    `gorm:"not null" json:"name"`
-	ServerID          uint      `gorm:"not null" json:"server_id"`
-	StorageLocationID uint      `gorm:"not null" json:"storage_location_id"`
-	NamingRuleID      uint      `gorm:"not null" json:"naming_rule_id"`
+	ServerID          uint      `gorm:"not null;constraint:OnDelete:RESTRICT" json:"server_id"`
+	StorageLocationID uint      `gorm:"not null;constraint:OnDelete:RESTRICT" json:"storage_location_id"`
+	NamingRuleID      uint      `gorm:"not null;constraint:OnDelete:RESTRICT" json:"naming_rule_id"`
 	ScheduleCron      string    `json:"schedule_cron,omitempty"`
 	Enabled           bool      `json:"enabled"`
 	CreatedAt         time.Time `json:"created_at"`
 
-	Server          *Server          `json:"server,omitempty"`
-	StorageLocation *StorageLocation `json:"storage_location,omitempty"`
-	NamingRule      *NamingRule      `json:"naming_rule,omitempty"`
-	Commands        []Command        `json:"commands,omitempty"`
-	FileRules       []FileRule       `json:"file_rules,omitempty"`
-	BackupRuns      []BackupRun      `json:"backup_runs,omitempty"`
+	Server          *Server          `gorm:"foreignKey:ServerID" json:"server,omitempty"`
+	StorageLocation *StorageLocation `gorm:"foreignKey:StorageLocationID" json:"storage_location,omitempty"`
+	NamingRule      *NamingRule      `gorm:"foreignKey:NamingRuleID" json:"naming_rule,omitempty"`
+	Commands        []Command        `gorm:"foreignKey:BackupProfileID;constraint:OnDelete:CASCADE" json:"commands,omitempty"`
+	FileRules       []FileRule       `gorm:"foreignKey:BackupProfileID;constraint:OnDelete:CASCADE" json:"file_rules,omitempty"`
+	BackupRuns      []BackupRun      `gorm:"foreignKey:BackupProfileID;constraint:OnDelete:CASCADE" json:"backup_runs,omitempty"`
 }

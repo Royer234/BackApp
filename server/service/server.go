@@ -125,6 +125,91 @@ func ServiceUpdateServer(id uint, input *entity.Server) (*entity.Server, error) 
 	return sanitizeServer(server), nil
 }
 
+// ServiceGetServerDeletionImpact returns the impact of deleting a server
+func ServiceGetServerDeletionImpact(serverID uint) (*DeletionImpact, error) {
+	// Get all backup profiles for this server
+	var profiles []entity.BackupProfile
+	if err := DB.Where("server_id = ?", serverID).Find(&profiles).Error; err != nil {
+		return nil, err
+	}
+
+	impact := &DeletionImpact{
+		BackupProfiles: len(profiles),
+	}
+
+	// Get all backup runs for these profiles
+	for _, profile := range profiles {
+		var runs []entity.BackupRun
+		if err := DB.Where("backup_profile_id = ?", profile.ID).Find(&runs).Error; err != nil {
+			return nil, err
+		}
+		impact.BackupRuns += len(runs)
+
+		// Get all backup files for these runs
+		for _, run := range runs {
+			var files []entity.BackupFile
+			if err := DB.Where("backup_run_id = ?", run.ID).Find(&files).Error; err != nil {
+				return nil, err
+			}
+			impact.BackupFiles += len(files)
+			for _, file := range files {
+				impact.TotalSizeBytes += file.SizeBytes
+				if file.LocalPath != "" {
+					impact.FilePaths = append(impact.FilePaths, file.LocalPath)
+				}
+			}
+		}
+	}
+
+	return impact, nil
+}
+
+// ServiceDeleteServer deletes a server and all related backup profiles, runs, and files
 func ServiceDeleteServer(id uint) error {
+	// First, verify server exists
+	if _, err := GetServerByID(id); err != nil {
+		return err
+	}
+
+	// Get all backup profiles for this server
+	var profiles []entity.BackupProfile
+	if err := DB.Where("server_id = ?", id).Find(&profiles).Error; err != nil {
+		return err
+	}
+
+	// Delete all backup runs and files for each profile
+	for _, profile := range profiles {
+		// Unschedule the profile first
+		scheduler := GetScheduler()
+		scheduler.UnscheduleProfile(profile.ID)
+
+		// Get all backup runs for this profile
+		var runs []entity.BackupRun
+		if err := DB.Where("backup_profile_id = ?", profile.ID).Find(&runs).Error; err != nil {
+			return err
+		}
+
+		// Delete all backup runs (this also deletes files from disk)
+		for _, run := range runs {
+			if err := ServiceDeleteBackupRun(run.ID); err != nil {
+				return err
+			}
+		}
+
+		// Delete commands and file rules for the profile
+		if err := DB.Where("backup_profile_id = ?", profile.ID).Delete(&entity.Command{}).Error; err != nil {
+			return err
+		}
+		if err := DB.Where("backup_profile_id = ?", profile.ID).Delete(&entity.FileRule{}).Error; err != nil {
+			return err
+		}
+
+		// Delete the profile
+		if err := DB.Delete(&profile).Error; err != nil {
+			return err
+		}
+	}
+
+	// Finally, delete the server
 	return DB.Delete(&entity.Server{}, id).Error
 }

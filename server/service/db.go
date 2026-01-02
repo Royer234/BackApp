@@ -18,6 +18,16 @@ func InitDB(dataSourceName string) {
 		log.Fatalf("Failed to open database: %v", err)
 	}
 
+	// Enable foreign key support for SQLite
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatalf("Failed to get raw database connection: %v", err)
+	}
+	_, err = sqlDB.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		log.Printf("Warning: Failed to enable foreign keys: %v", err)
+	}
+
 	// Auto-migrate the schema
 	err = DB.AutoMigrate(
 		&entity.Server{},

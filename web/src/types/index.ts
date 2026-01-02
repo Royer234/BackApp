@@ -7,3 +7,4 @@ export * from './backup-file';
 export * from './backup-run';
 export * from './backup-run-log';
 export * from './backup-profile';
+export * from './deletion-impact';

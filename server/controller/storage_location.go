@@ -51,6 +51,7 @@ func handleStorageLocationUpdate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON body"})
 		return
 	}
+
 	loc, err := service.ServiceUpdateStorageLocation(uint(id), &input)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -61,6 +62,52 @@ func handleStorageLocationUpdate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, loc)
+}
+
+func handleStorageLocationMoveImpact(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	newPath := c.Query("new_path")
+	if newPath == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "new_path query parameter required"})
+		return
+	}
+
+	impact, err := service.ServiceGetStorageLocationMoveImpact(uint(id), newPath)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "storage location not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, impact)
+}
+
+func handleStorageLocationDeletionImpact(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	impact, err := service.ServiceGetStorageLocationDeletionImpact(uint(id))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "storage location not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, impact)
 }
 
 func handleStorageLocationDelete(c *gin.Context) {

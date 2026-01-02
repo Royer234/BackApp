@@ -5,7 +5,7 @@ import "time"
 // BackupRun represents each execution of a backup profile
 type BackupRun struct {
 	ID              uint      `gorm:"primaryKey" json:"id"`
-	BackupProfileID uint      `gorm:"not null" json:"backup_profile_id"`
+	BackupProfileID uint      `gorm:"not null;constraint:OnDelete:CASCADE" json:"backup_profile_id"`
 	StartTime       time.Time `json:"start_time"`
 	EndTime         time.Time `json:"end_time"`
 	Status          string    `gorm:"type:text" json:"status"`
@@ -15,5 +15,5 @@ type BackupRun struct {
 	ErrorMessage    string    `json:"error_message,omitempty"`
 	Log             string    `json:"log,omitempty"`
 
-	BackupFiles []BackupFile `json:"backup_files,omitempty"`
+	BackupFiles []BackupFile `gorm:"foreignKey:BackupRunID;constraint:OnDelete:CASCADE" json:"backup_files,omitempty"`
 }

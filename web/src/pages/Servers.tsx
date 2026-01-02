@@ -9,8 +9,9 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { serverApi } from '../api';
+import { DestructiveActionDialog, type DestructiveAction } from '../components/common';
 import { ServerDialog, ServerList } from '../components/servers';
-import type { Server } from '../types';
+import type { Server, DeletionImpact } from '../types';
 
 function Servers() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -23,6 +24,13 @@ function Servers() {
     message: '',
     severity: 'success',
   });
+
+  // Deletion confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [serverToDelete, setServerToDelete] = useState<Server | null>(null);
+  const [deletionImpact, setDeletionImpact] = useState<DeletionImpact | null>(null);
+  const [loadingImpact, setLoadingImpact] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadServers();
@@ -106,9 +114,31 @@ function Servers() {
     }
   };
 
-  const handleDeleteServer = async (serverId: number) => {
+  const handleDeleteServerRequest = async (serverId: number) => {
+    const server = servers.find(s => s.id === serverId);
+    if (!server) return;
+
+    setServerToDelete(server);
+    setLoadingImpact(true);
+    setDeleteDialogOpen(true);
+
     try {
-      await serverApi.delete(serverId);
+      const impact = await serverApi.getDeletionImpact(serverId);
+      setDeletionImpact(impact);
+    } catch (error) {
+      console.error('Error loading deletion impact:', error);
+      setDeletionImpact({ backup_profiles: 0, backup_runs: 0, backup_files: 0, total_size_bytes: 0 });
+    } finally {
+      setLoadingImpact(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!serverToDelete) return;
+
+    setDeleting(true);
+    try {
+      await serverApi.delete(serverToDelete.id);
       setSnackbar({
         open: true,
         message: 'Server deleted successfully',
@@ -121,11 +151,58 @@ function Servers() {
         message: 'Failed to delete server',
         severity: 'error',
       });
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setServerToDelete(null);
+      setDeletionImpact(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setServerToDelete(null);
+    setDeletionImpact(null);
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const getDeleteActions = (): DestructiveAction[] => {
+    if (!deletionImpact) return [];
+    const actions: DestructiveAction[] = [];
+
+    if (deletionImpact.backup_profiles > 0) {
+      actions.push({
+        type: 'delete',
+        label: `Delete ${deletionImpact.backup_profiles} backup profile${deletionImpact.backup_profiles !== 1 ? 's' : ''}`,
+        details: 'Including all associated commands and file rules',
+      });
+    }
+
+    if (deletionImpact.backup_runs > 0) {
+      actions.push({
+        type: 'delete',
+        label: `Delete ${deletionImpact.backup_runs} backup run${deletionImpact.backup_runs !== 1 ? 's' : ''}`,
+        details: 'Including all logs and metadata',
+      });
+    }
+
+    if (deletionImpact.backup_files > 0) {
+      actions.push({
+        type: 'delete',
+        label: `Delete ${deletionImpact.backup_files} backup file${deletionImpact.backup_files !== 1 ? 's' : ''} from disk`,
+        details: `Total size: ${formatSize(deletionImpact.total_size_bytes)}`,
+      });
+    }
+
+    actions.push({
+      type: 'delete',
+      label: `Delete server "${serverToDelete?.name}"`,
+    });
+
+    return actions;
   };
 
   if (loading) {
@@ -166,8 +243,27 @@ function Servers() {
         servers={servers}
         testingConnection={testingConnection}
         onTestConnection={handleTestConnection}
-        onDeleteServer={handleDeleteServer}
+        onDeleteServer={handleDeleteServerRequest}
         onEditServer={handleEditServer}
+      />
+
+      <DestructiveActionDialog
+        open={deleteDialogOpen}
+        title={`Delete Server "${serverToDelete?.name || ''}"`}
+        description="Are you sure you want to delete this server? This will permanently delete all associated backup data."
+        actionType="delete"
+        impact={{
+          backupProfiles: deletionImpact?.backup_profiles,
+          backupRuns: deletionImpact?.backup_runs,
+          backupFiles: deletionImpact?.backup_files,
+          totalSizeBytes: deletionImpact?.total_size_bytes,
+          filePaths: deletionImpact?.file_paths,
+        }}
+        actions={getDeleteActions()}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Delete Server"
+        loading={deleting || loadingImpact}
       />
 
       <Snackbar
@@ -182,6 +278,14 @@ function Servers() {
       </Snackbar>
     </Box>
   );
+}
+
+function formatSize(bytes: number): string {
+  if (!bytes) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 }
 
 export default Servers;
