@@ -281,3 +281,71 @@ export async function deleteBackupFileViaApi(request: APIRequestContext, fileId:
   const response = await request.delete(`/api/v1/backup-files/${fileId}`);
   expect(response.ok()).toBeTruthy();
 }
+
+/**
+ * Trigger retention cleanup via the API (test mode only)
+ */
+export async function triggerRetentionCleanup(request: APIRequestContext): Promise<void> {
+  const response = await request.post('/api/v1/test/trigger-retention-cleanup');
+  if (!response.ok()) {
+    throw new Error('Failed to trigger retention cleanup');
+  }
+}
+
+/**
+ * Update backup run end_time via the API (test mode only)
+ */
+export async function updateBackupRunDate(
+  request: APIRequestContext,
+  runId: number,
+  endTime: Date
+): Promise<void> {
+  const response = await request.put(`/api/v1/test/backup-runs/${runId}/date`, {
+    data: {
+      end_time: endTime.toISOString(),
+    },
+  });
+  if (!response.ok()) {
+    throw new Error(`Failed to update backup run date: ${await response.text()}`);
+  }
+}
+
+/**
+ * Get backup run details via the API
+ */
+export async function getBackupRunViaApi(
+  request: APIRequestContext,
+  runId: number
+): Promise<{ id: number; status: string; retention_cleaned_up: boolean; end_time: string }> {
+  const response = await request.get(`/api/v1/backup-runs/${runId}`);
+  expect(response.ok()).toBeTruthy();
+  return response.json();
+}
+
+/**
+ * Update backup profile via the API
+ */
+export async function updateBackupProfileViaApi(
+  request: APIRequestContext,
+  profileId: number,
+  data: { retention_days?: number | null }
+): Promise<void> {
+  // First fetch the current profile to get all required fields
+  const getResponse = await request.get(`/api/v1/backup-profiles/${profileId}`);
+  expect(getResponse.ok()).toBeTruthy();
+  const profile = await getResponse.json();
+
+  // Merge the updates with existing data
+  const response = await request.put(`/api/v1/backup-profiles/${profileId}`, {
+    data: {
+      name: profile.name,
+      server_id: profile.server_id,
+      storage_location_id: profile.storage_location_id,
+      naming_rule_id: profile.naming_rule_id,
+      schedule_cron: profile.schedule_cron,
+      enabled: profile.enabled,
+      ...data,
+    },
+  });
+  expect(response.ok()).toBeTruthy();
+}

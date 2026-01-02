@@ -11,10 +11,12 @@ import {
 interface AddCommandFormProps {
   formData: {
     command: string;
+    working_directory: string;
     run_stage: 'pre' | 'post';
   };
   onFormDataChange: (data: {
     command: string;
+    working_directory: string;
     run_stage: 'pre' | 'post';
   }) => void;
   onAdd: () => void;
@@ -26,6 +28,15 @@ function AddCommandForm({ formData, onFormDataChange, onAdd, onCancel }: AddComm
     <Card sx={{ mb: 2, backgroundColor: '#f5f5f5' }}>
       <CardContent>
         <Stack spacing={2}>
+          <TextField
+            fullWidth
+            label="Working Directory"
+            value={formData.working_directory}
+            onChange={(e) => onFormDataChange({ ...formData, working_directory: e.target.value })}
+            placeholder="/"
+            helperText="Directory to run the command in (default: /)"
+            size="small"
+          />
           <TextField
             fullWidth
             label="Command"

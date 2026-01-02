@@ -93,13 +93,24 @@ func NewSSHClient(server *entity.Server) (*SSHClient, error) {
 
 // RunCommand executes a command on the remote server
 func (c *SSHClient) RunCommand(cmd string) (string, error) {
+	return c.RunCommandInDir(cmd, "")
+}
+
+// RunCommandInDir executes a command on the remote server in a specific directory
+func (c *SSHClient) RunCommandInDir(cmd string, workingDir string) (string, error) {
 	session, err := c.client.NewSession()
 	if err != nil {
 		return "", fmt.Errorf("failed to create session: %v", err)
 	}
 	defer session.Close()
 
-	output, err := session.CombinedOutput(cmd)
+	// If working directory is specified and not root, prepend cd command
+	fullCmd := cmd
+	if workingDir != "" && workingDir != "/" {
+		fullCmd = fmt.Sprintf("cd '%s' && %s", workingDir, cmd)
+	}
+
+	output, err := session.CombinedOutput(fullCmd)
 	if err != nil {
 		return string(output), fmt.Errorf("command failed: %v", err)
 	}

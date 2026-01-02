@@ -35,12 +35,16 @@ func ServiceUpdateCommand(id uint, input *entity.Command) (*entity.Command, erro
 	if input.RunOrder != 0 {
 		updates["run_order"] = input.RunOrder
 	}
+	// Always update working_directory (can be empty string)
+	updates["working_directory"] = input.WorkingDirectory
 
 	if len(updates) > 0 {
 		if err := DB.Model(&cmd).Updates(updates).Error; err != nil {
 			return nil, err
 		}
 	}
+	// Reload to get updated values
+	DB.First(&cmd, id)
 	return &cmd, nil
 }
 

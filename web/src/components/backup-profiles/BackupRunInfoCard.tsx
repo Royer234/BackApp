@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Divider, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Divider, Typography } from '@mui/material';
 import type { BackupRun } from '../../types';
 import { formatDate } from '../../utils/format';
 
@@ -38,6 +38,17 @@ function BackupRunInfoCard({ run, duration }: BackupRunInfoCardProps) {
             <Typography color="text.secondary">Duration:</Typography>
             <Typography fontWeight="medium">{duration}</Typography>
           </Box>
+          {run.retention_cleaned_up && (
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography color="text.secondary">Retention:</Typography>
+              <Chip
+                label="Files Cleaned Up"
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
+            </Box>
+          )}
           {run.local_backup_path && (
             <Box display="flex" justifyContent="space-between">
               <Typography color="text.secondary">Backup Path:</Typography>

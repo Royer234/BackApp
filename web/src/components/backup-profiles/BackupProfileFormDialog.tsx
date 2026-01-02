@@ -70,6 +70,7 @@ function BackupProfileFormDialog({
         storage_location_id: profileData.storage_location_id,
         naming_rule_id: profileData.naming_rule_id,
         schedule_cron: profileData.schedule_cron,
+        retention_days: profileData.retention_days,
         enabled: profileData.enabled || false,
       };
 

@@ -16,10 +16,12 @@ interface CommandItemProps {
 function CommandItem({ command, isFirst, isLast, sortedCommands, profileId, onCommandChanged }: CommandItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedCommand, setEditedCommand] = useState('');
+  const [editedWorkingDir, setEditedWorkingDir] = useState('');
 
   const handleEdit = () => {
     setIsEditing(true);
     setEditedCommand(command.command);
+    setEditedWorkingDir(command.working_directory || '');
   };
 
   const handleSave = async () => {
@@ -27,6 +29,7 @@ function CommandItem({ command, isFirst, isLast, sortedCommands, profileId, onCo
     try {
       await commandApi.update(command.id, {
         command: editedCommand.trim(),
+        working_directory: editedWorkingDir || undefined,
         run_stage: command.run_stage,
         run_order: command.run_order,
       });
@@ -59,11 +62,13 @@ function CommandItem({ command, isFirst, isLast, sortedCommands, profileId, onCo
       await Promise.all([
         commandApi.update(command.id, {
           command: command.command,
+          working_directory: command.working_directory,
           run_stage: command.run_stage,
           run_order: prevCommand.run_order,
         }),
         commandApi.update(prevCommand.id, {
           command: prevCommand.command,
+          working_directory: prevCommand.working_directory,
           run_stage: prevCommand.run_stage,
           run_order: command.run_order,
         }),
@@ -86,11 +91,13 @@ function CommandItem({ command, isFirst, isLast, sortedCommands, profileId, onCo
       await Promise.all([
         commandApi.update(command.id, {
           command: command.command,
+          working_directory: command.working_directory,
           run_stage: command.run_stage,
           run_order: nextCommand.run_order,
         }),
         commandApi.update(nextCommand.id, {
           command: nextCommand.command,
+          working_directory: nextCommand.working_directory,
           run_stage: nextCommand.run_stage,
           run_order: command.run_order,
         }),
@@ -155,23 +162,40 @@ function CommandItem({ command, isFirst, isLast, sortedCommands, profileId, onCo
       </Box>
       <Box flex={1} minWidth={0}>
         {isEditing ? (
-          <TextField
-            fullWidth
-            size="small"
-            value={editedCommand}
-            onChange={(e) => setEditedCommand(e.target.value)}
-            multiline
-            rows={2}
-            variant="outlined"
-          />
+          <Box display="flex" flexDirection="column" gap={1}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Working Directory"
+              value={editedWorkingDir}
+              onChange={(e) => setEditedWorkingDir(e.target.value)}
+              placeholder="/"
+              variant="outlined"
+            />
+            <TextField
+              fullWidth
+              size="small"
+              label="Command"
+              value={editedCommand}
+              onChange={(e) => setEditedCommand(e.target.value)}
+              multiline
+              rows={2}
+              variant="outlined"
+            />
+          </Box>
         ) : (
-          <Typography
-            variant="body2"
-            fontFamily="monospace"
-            sx={{ wordBreak: 'break-all' }}
-          >
-            {command.command}
-          </Typography>
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              working directory: {command.working_directory || '/'}
+            </Typography>
+            <Typography
+              variant="body2"
+              fontFamily="monospace"
+              sx={{ wordBreak: 'break-all' }}
+            >
+              {command.command}
+            </Typography>
+          </Box>
         )}
       </Box>
       {profileId && (

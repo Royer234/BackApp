@@ -1,5 +1,6 @@
 import {
   Computer as ComputerIcon,
+  DeleteSweep as DeleteSweepIcon,
   Error as ErrorIcon,
   History as HistoryIcon,
   Label as LabelIcon,
@@ -130,6 +131,19 @@ function BackupProfileInfoGrid({ profile }: BackupProfileInfoGridProps) {
           </Box>
         </Grid>
       )}
+      <Grid size={{ xs: 12 }}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <DeleteSweepIcon fontSize="small" color="action" />
+          <Typography variant="body2" color="text.secondary">
+            Retention:{' '}
+            <strong>
+              {profile.retention_days && profile.retention_days > 0
+                ? `${profile.retention_days} days`
+                : 'Keep forever'}
+            </strong>
+          </Typography>
+        </Box>
+      </Grid>
     </Grid>
   );
 }

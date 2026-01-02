@@ -89,6 +89,8 @@ func SetupRouter(r *gin.Engine) {
 		// Test-only endpoints
 		if config.TestMode {
 			api.POST("/test/reset-database", handleResetDatabase)
+			api.POST("/test/trigger-retention-cleanup", handleTriggerRetentionCleanup)
+			api.PUT("/test/backup-runs/:id/date", handleUpdateBackupRunDate)
 		}
 	}
 }

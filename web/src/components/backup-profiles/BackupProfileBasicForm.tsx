@@ -1,7 +1,9 @@
 import {
   Checkbox,
   FormControlLabel,
+  FormHelperText,
   Stack,
+  TextField,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { BackupProfile, NamingRule, Server, StorageLocation } from '../../types';
@@ -69,6 +71,22 @@ function BackupProfileBasicForm({
         onChange={(v) => handleChange('schedule_cron' as keyof BackupProfile, v)}
         helperText="Leave empty to disable scheduling"
       />
+
+      <TextField
+        fullWidth
+        label="Retention Days"
+        type="number"
+        value={formData.retention_days ?? ''}
+        onChange={(e) => {
+          const value = e.target.value;
+          handleChange('retention_days' as keyof BackupProfile, value === '' ? null : parseInt(value, 10));
+        }}
+        inputProps={{ min: 0 }}
+        size="small"
+      />
+      <FormHelperText sx={{ mt: -1.5, ml: 1.5 }}>
+        Number of days to keep backup files. Leave empty or 0 to keep forever.
+      </FormHelperText>
 
       <FormControlLabel
         control={

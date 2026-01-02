@@ -16,6 +16,7 @@ function CommandsDisplay({ commands, profileId, onCommandsChanged }: CommandsDis
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({
     command: '',
+    working_directory: '',
     run_stage: 'pre' as 'pre' | 'post',
   });
 
@@ -27,10 +28,11 @@ function CommandsDisplay({ commands, profileId, onCommandsChanged }: CommandsDis
 
       await commandApi.create(profileId, {
         command: formData.command.trim(),
+        working_directory: formData.working_directory || undefined,
         run_stage: formData.run_stage,
         run_order: maxOrder + 1,
       });
-      setFormData({ command: '', run_stage: 'pre' });
+      setFormData({ command: '', working_directory: '', run_stage: 'pre' });
       setShowAddForm(false);
       onCommandsChanged?.();
     } catch (error) {
@@ -79,7 +81,7 @@ function CommandsDisplay({ commands, profileId, onCommandsChanged }: CommandsDis
           onAdd={handleAddCommand}
           onCancel={() => {
             setShowAddForm(false);
-            setFormData({ command: '', run_stage: 'pre' });
+            setFormData({ command: '', working_directory: '', run_stage: 'pre' });
           }}
         />
       )}

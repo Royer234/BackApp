@@ -1,4 +1,5 @@
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import {
   Box,
   Chip,
@@ -219,8 +220,13 @@ function BackupRunsList({ runs, onRunDeleted }: BackupRunsListProps) {
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Box>
+                  <Box display="flex" alignItems="center" gap={0.5}>
                     {getStatusBadge(run.status)}
+                    {run.retention_cleaned_up && (
+                      <Tooltip title="Files cleaned up by retention policy">
+                        <CleaningServicesIcon fontSize="small" color="warning" />
+                      </Tooltip>
+                    )}
                     {run.error_message && (
                       <Tooltip title={run.error_message}>
                         <Typography variant="caption" color="error" display="block" mt={0.5}>

@@ -12,6 +12,7 @@ export interface BackupProfile {
   storage_location_id: number;
   naming_rule_id: number;
   schedule_cron?: string;
+  retention_days?: number | null;
   enabled: boolean;
   created_at: string;
   server?: Server;
@@ -28,6 +29,7 @@ export interface BackupProfileCreateInput {
   storage_location_id: number;
   naming_rule_id: number;
   schedule_cron?: string;
+  retention_days?: number | null;
   enabled: boolean;
 }
 
@@ -37,5 +39,6 @@ export interface BackupProfileUpdateInput {
   storage_location_id?: number;
   naming_rule_id?: number;
   schedule_cron?: string;
+  retention_days?: number | null;
   enabled?: boolean;
 }

@@ -56,6 +56,7 @@ func ServiceUpdateBackupProfile(id uint, input *entity.BackupProfile) (*entity.B
 	profile.StorageLocationID = input.StorageLocationID
 	profile.NamingRuleID = input.NamingRuleID
 	profile.ScheduleCron = input.ScheduleCron
+	profile.RetentionDays = input.RetentionDays
 	profile.Enabled = input.Enabled
 	if err := DB.Save(profile).Error; err != nil {
 		return nil, err

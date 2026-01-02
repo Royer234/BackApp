@@ -10,6 +10,7 @@ type BackupProfile struct {
 	StorageLocationID uint      `gorm:"not null;constraint:OnDelete:RESTRICT" json:"storage_location_id"`
 	NamingRuleID      uint      `gorm:"not null;constraint:OnDelete:RESTRICT" json:"naming_rule_id"`
 	ScheduleCron      string    `json:"schedule_cron,omitempty"`
+	RetentionDays     *int      `json:"retention_days"` // nil or 0 means keep forever
 	Enabled           bool      `json:"enabled"`
 	CreatedAt         time.Time `json:"created_at"`
 

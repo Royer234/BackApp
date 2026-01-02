@@ -57,6 +57,9 @@ func main() {
 		log.Printf("Warning: Failed to load backup schedules: %v", err)
 	}
 
+	// Start retention cleanup scheduler
+	service.StartRetentionScheduler()
+
 	// Create a filesystem for embedded static files
 	staticFS, err := fs.Sub(embeddedStaticFiles, "static")
 	if err != nil {

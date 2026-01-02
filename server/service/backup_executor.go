@@ -205,8 +205,12 @@ func (e *BackupExecutor) executeCommands(sshClient *SSHClient, commands []entity
 
 	// Execute commands in order
 	for _, cmd := range stageCommands {
-		e.logToDatabase(runID, "INFO", fmt.Sprintf("Executing %s command: %s", stage, cmd.Command))
-		output, err := sshClient.RunCommand(cmd.Command)
+		workDir := cmd.WorkingDirectory
+		if workDir == "" {
+			workDir = "/"
+		}
+		e.logToDatabase(runID, "INFO", fmt.Sprintf("Executing %s command in %s: %s", stage, workDir, cmd.Command))
+		output, err := sshClient.RunCommandInDir(cmd.Command, workDir)
 		if err != nil {
 			e.logToDatabase(runID, "ERROR", fmt.Sprintf("Command failed: %s, error: %v", cmd.Command, err))
 			return fmt.Errorf("command '%s' failed: %v, output: %s", cmd.Command, err, output)

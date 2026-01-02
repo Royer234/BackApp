@@ -23,6 +23,7 @@ It is a very lightweight server (~50 MB) that runs locally (or on a dedicated ma
 - Schedule backups using cron expressions.
 - Simple and intuitive web interface built with React and Material-UI.
 - Deleting backups, backup profiles, and servers with confirmation dialogs to prevent accidental deletions.
+- Automatic retention policy to clean up old backups based on user-defined rules.
 
 ## Configuration
 

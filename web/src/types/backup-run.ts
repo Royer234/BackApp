@@ -13,5 +13,6 @@ export interface BackupRun {
   total_size_bytes?: number;
   error_message?: string;
   log?: string;
+  retention_cleaned_up?: boolean;
   backup_files?: BackupFile[];
 }
